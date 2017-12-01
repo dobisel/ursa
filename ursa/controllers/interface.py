@@ -1,7 +1,18 @@
+from nanohttp import RestController, json, context, settings, action
+from restfulpy.authorization import authorize
+from restfulpy.validation import validate_form
 from network_interfaces import InterfacesFile
 
 
-if_ = InterfacesFile('/etc/network/interfaces')
-eth0 = if_.get_iface('eth0')
-eth0.address = '192.168.11.2'
-if_.save('/etc/network/interfaces', validate=False)
+class InterfacesController(RestController):
+
+    @json
+    @authorize('admin')
+    def get(self):
+        pass
+
+    @action
+    @authorize('admin')
+    # @validate_form(whitelist=['title'])
+    def put(self):
+        pass

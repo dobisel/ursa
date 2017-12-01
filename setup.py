@@ -11,6 +11,7 @@ with open(join(dirname(__file__), 'ursa', '__init__.py')) as v_file:
 
 dependencies = [
     'nanohttp >= 0.20.1',
+    'restfulpy >= 0.34.1',
     'network_interfaces',
     'pyjwt',
     'idna <2.6, >=2.5',

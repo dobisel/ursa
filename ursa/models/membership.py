@@ -1,0 +1,118 @@
+import uuid
+from _sha256 import sha256
+
+import os
+
+from nanohttp import HttpBadRequest, context, HttpUnauthorized
+from restfulpy.orm import ModifiedMixin, DeclarativeBase, Field
+from restfulpy.principal import JwtPrincipal, JwtRefreshToken
+from sqlalchemy import Integer, Unicode, ForeignKey
+from sqlalchemy.orm import synonym
+
+
+class Member(ModifiedMixin, DeclarativeBase):
+    __tablename__ = 'member'
+
+    id = Field(Integer, primary_key=True)
+    user_name = Field(Unicode(64),index=True, min_length=4, label='User Name', json='userName')
+
+    _password = Field(
+        'password', Unicode(128), index=True, json='password', protected=True, min_length=4, label='Password'
+    )
+
+    type = Field(Unicode(50))
+
+    __mapper_args__ = {
+        'polymorphic_identity': __tablename__,
+        'polymorphic_on': type
+    }
+
+    @property
+    def roles(self):
+
+        return []
+
+    @classmethod
+    def _hash_password(cls, password):
+        salt = sha256()
+        salt.update(os.urandom(60))
+        salt = salt.hexdigest()
+
+        hashed_pass = sha256()
+        # Make sure password is a str because we cannot hash unicode objects
+        hashed_pass.update((password + salt).encode('utf-8'))
+        hashed_pass = hashed_pass.hexdigest()
+
+        password = salt + hashed_pass
+        return password
+
+    def _set_password(self, password):
+        """Hash ``password`` on the fly and store its hashed version."""
+        min_length = self.__class__.password.info['min_length']
+        if len(password) < min_length:
+            raise HttpBadRequest('Please enter at least %d characters for password field.' % min_length)
+        self._password = self._hash_password(password)
+
+    def _get_password(self):
+        """Return the hashed version of the password."""
+        return self._password
+
+    password = synonym('_password', descriptor=property(_get_password, _set_password), info=dict(protected=True))
+
+    def validate_password(self, password):
+        """
+        Check the password against existing credentials.
+        :param password: the password that was provided by the user to
+            try and authenticate. This is the clear text version that we will
+            need to match against the hashed one in the database.
+        :type password: unicode object.
+        :return: Whether the password is valid.
+        :rtype: bool
+        """
+        hashed_pass = sha256()
+        hashed_pass.update((password + self.password[:64]).encode('utf-8'))
+        return self.password[64:] == hashed_pass.hexdigest()
+
+    def create_jwt_principal(self, session_id=None):
+        # FIXME: IMPORTANT Include user password as salt in signature
+
+        if session_id is None:
+            session_id = str(uuid.uuid4())
+
+        return JwtPrincipal(dict(
+            id=self.id,
+            userName=self.user_name,
+            roles=self.roles,
+            sessionId=session_id
+        ))
+
+    @classmethod
+    def current(cls):
+        if context.identity is None:
+            raise HttpUnauthorized()
+
+        return cls.query.filter(cls.user_name == context.identity.userName).one()
+
+    def change_password(self, current_password, new_password):
+        if not self.validate_password(current_password):
+            raise HttpBadRequest()
+
+        self.password = new_password
+
+    def create_refresh_principal(self):
+        return JwtRefreshToken(dict(
+            id=self.id
+        ))
+
+
+class Admin(Member):
+    __tablename__ = 'admin'
+    __mapper_args__ = {
+        'polymorphic_identity': __tablename__,
+    }
+
+    id = Field(Integer, ForeignKey(Member.id), primary_key=True)
+
+    @property
+    def roles(self):
+        return ['admin']

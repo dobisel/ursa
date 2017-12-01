@@ -1,9 +1,16 @@
 
 from nanohttp import html, json, RestController
+from restfulpy.authorization import authorize
+from restfulpy.controllers import RootController
+
 import ursa
+from .network import NetworkController
+from .sessions import SessionsController
 
 
 class ApiV1(RestController):
+    network = NetworkController()
+    sessions = SessionsController()
 
     @json
     def version(self):

@@ -1,16 +1,15 @@
 from os.path import dirname, join
 
-from nanohttp.application import Application
+from restfulpy.application import Application
 
-from koala.controllers import Root
-from koala.authentication import Authenticator
-from .mockup_data import insert_mockup
+from ursa.authentication import Authenticator
+from ursa.controllers import Root
 
 __version__ = '0.1.0-planning.0'
 
 
-class Koala(Application):
-    # __authenticator__ = Authenticator()
+class Ursa(Application):
+    __authenticator__ = Authenticator()
 
     builtin_configuration = """
     db:
@@ -21,7 +20,12 @@ class Koala(Application):
 
     application:
       welcome_url: http://localhost:8081/welcome
-
+    
+    interfaces_file_path:
+      /etc/network/interfaces
+      
+    default_iface_title:
+      eth0
     """
 
     def __init__(self):
@@ -32,3 +36,11 @@ class Koala(Application):
             version=__version__,
         )
 
+    def insert_mockup(self):
+        print('No mockup data yet.')
+
+    def insert_basedata(self):  # pragma: no cover
+        print('This project doesn\'t have any base-data.')
+
+
+ursa = Ursa()
