@@ -22,7 +22,7 @@ class Ursa(Application):
       welcome_url: http://localhost:8081/welcome
     
     interfaces_file_path:
-      /etc/network/interfaces
+      /home/mehrdad/workspace/ursa/data/interfaces
       
     default_iface_title:
       eth0

@@ -13,6 +13,15 @@ class InterfacesController(RestController):
 
     @action
     @authorize('admin')
-    # @validate_form(whitelist=['title'])
+    @validate_form(whitelist=['address', 'netmask', 'gateway', 'DNS1', 'DNS2', 'network'])
     def put(self):
-        pass
+        iface = InterfacesFile(settings.interfaces_file_path)
+        interface = iface.get_iface(settings.default_iface_title)
+        interface.address = context.form.get('address')
+        interface.netmask = context.form.get('netmask')
+        interface.gateway = context.form.get('gateway')
+        interface.DNS1 = context.form.get('DNS1')
+        interface.DNS2 = context.form.get('DNS2')
+        interface.network = context.form.get('network')
+        iface.save(validate=False)
+
