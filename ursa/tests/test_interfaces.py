@@ -2,6 +2,7 @@
 import unittest
 from os.path import join, dirname, abspath
 
+from nanohttp import settings
 from restfulpy.testing import FormParameter
 
 from .helpers import WebTestCase, As
@@ -14,8 +15,16 @@ data_dir = join(this_dir, 'data')
 class InterfaceTestCase(WebTestCase):
     url = '/apiv1/network/interfaces'
 
+    def configure_app(cls):
+        super().configure_app()
+        # TODO: Good file path
+        settings.merge("""
+        network: 
+          interfaces_file: 
+        """)
+
     def test_get(self):
-        pass
+        raise NotImplementedError()
 
     def test_put(self):
         self.login_as_admin()
@@ -26,11 +35,13 @@ class InterfaceTestCase(WebTestCase):
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255'),
                 FormParameter('gateway', '192.168.1.1'),
-                FormParameter('DNS1', '8.8.8.8'),
-                FormParameter('DNS2', '9.9.9.9'),
+                FormParameter('nameservers', '8.8.8.8 9.9.9.9'),
                 FormParameter('network', '1.9.9.9'),
             ]
         )
+
+        # TODO: Assert response
+        # TODO: Assert the exact file
 
 
 if __name__ == '__main__':

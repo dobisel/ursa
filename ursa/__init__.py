@@ -21,11 +21,9 @@ class Ursa(Application):
     application:
       welcome_url: http://localhost:8081/welcome
     
-    interfaces_file_path:
-      /home/mehrdad/workspace/ursa/data/interfaces
-      
-    default_iface_title:
-      eth0
+    network:
+      interfaces_file: /home/mehrdad/workspace/ursa/data/interfaces
+      default_interface: eth0
     """
 
     def __init__(self):
