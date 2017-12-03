@@ -25,17 +25,17 @@ class InterfaceTestCase(WebTestCase):
           interfaces_file: %(data_dir)s/tests/interfaces
         """)
         if not os.path.isfile(settings.network.interfaces_file):
-            if not os.path.isdir("../../data/tests"):
-                os.makedirs("../../data/tests")
+            if not os.path.isdir(os.path.join(settings.network.interfaces_dir, 'tests')):
+                os.makedirs(os.path.join(settings.network.interfaces_dir, 'tests'))
 
-            interface_file = open(settings.network.interfaces_file, 'w')
-            interface_file.write(f'iface {settings.network.default_interface} inet static\n')
-            interface_file.write('  address \n')
-            interface_file.write('  gateway \n')
-            interface_file.write('  netmask \n')
-            interface_file.write('  network \n')
-            interface_file.write('  nameservers \n')
-            interface_file.close()
+        interface_file = open(settings.network.interfaces_file, 'w')
+        interface_file.write(f'iface {settings.network.default_interface} inet static\n')
+        interface_file.write('  address \n')
+        interface_file.write('  gateway \n')
+        interface_file.write('  netmask \n')
+        interface_file.write('  network \n')
+        interface_file.write('  nameservers \n')
+        interface_file.close()
 
     def test_get(self):
         self.request(
