@@ -15,6 +15,7 @@ data_dir = join(this_dir, 'data')
 class InterfaceTestCase(WebTestCase):
     url = '/apiv1/network/interfaces'
 
+    @classmethod
     def configure_app(cls):
         super().configure_app()
         # TODO: Good file path
