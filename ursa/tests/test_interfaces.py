@@ -6,7 +6,7 @@ from nanohttp import settings
 from restfulpy.testing import FormParameter
 from network_interfaces import InterfacesFile
 
-from .helpers import WebTestCase, As
+from ursa.tests.helpers import WebTestCase, As
 
 
 this_dir = abspath(dirname(__file__))
@@ -49,7 +49,7 @@ class InterfaceTestCase(WebTestCase):
 
         self.request(
             As.admin, 'PUT', f'{self.url}',
-            expected_status=401
+            expected_status=400
         )
 
         self.request(
@@ -61,7 +61,7 @@ class InterfaceTestCase(WebTestCase):
                 FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
                 FormParameter('networkId', '1.9.9.9'),
             ],
-            expected_status=401
+            expected_status=400
         )
 
         self.login_as_admin()
