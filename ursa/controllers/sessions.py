@@ -14,7 +14,7 @@ class SessionsController(RestController):
 
         def bad():
             logger.info('Login failed: %s' % user_name)
-            raise HttpBadRequest('Invalid email or password')
+            raise HttpBadRequest('Invalid username or password')
 
         if not (user_name and password):
             bad()
