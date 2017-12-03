@@ -23,6 +23,7 @@ class Ursa(Application):
       welcome_url: http://localhost:8081/welcome
     
     network:
+      interfaces_dir: %(data_dir)s
       interfaces_file: %(data_dir)s/interfaces
       default_interface: eth0
     """

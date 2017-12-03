@@ -1,6 +1,7 @@
 
 import unittest
 from os.path import join, dirname, abspath
+import os
 
 from nanohttp import settings
 from restfulpy.testing import FormParameter
@@ -23,6 +24,18 @@ class InterfaceTestCase(WebTestCase):
         network: 
           interfaces_file: %(data_dir)s/tests/interfaces
         """)
+        if not os.path.isfile(settings.network.interfaces_file):
+            if not os.path.isdir("../../data/tests"):
+                os.makedirs("../../data/tests")
+
+            interface_file = open(settings.network.interfaces_file, 'w')
+            interface_file.write(f'iface {settings.network.default_interface} inet static\n')
+            interface_file.write('  address \n')
+            interface_file.write('  gateway \n')
+            interface_file.write('  netmask \n')
+            interface_file.write('  network \n')
+            interface_file.write('  nameservers \n')
+            interface_file.close()
 
     def test_get(self):
         self.request(

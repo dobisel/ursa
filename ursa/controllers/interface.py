@@ -1,3 +1,6 @@
+
+import os.path
+
 from nanohttp import RestController, json, context, settings, HttpBadRequest
 from restfulpy.authorization import authorize
 from restfulpy.validation import validate_form
@@ -9,9 +12,22 @@ class InterfacesController(RestController):
     @json
     @authorize('admin')
     def get(self):
+
+        if not os.path.isfile(settings.network.interfaces_file):
+            if not os.path.isdir(settings.network.interfaces_dir):
+                os.makedirs(settings.network.interfaces_dir)
+
+            interface_file = open(settings.network.interfaces_file, 'w')
+            interface_file.write(f'iface {settings.network.default_interface} inet static\n')
+            interface_file.write('  address \n')
+            interface_file.write('  gateway \n')
+            interface_file.write('  netmask \n')
+            interface_file.write('  network \n')
+            interface_file.write('  nameservers \n')
+            interface_file.close()
+
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
-
         response = dict()
         response['address'] = interface.address
         response['netmask'] = interface.netmask
