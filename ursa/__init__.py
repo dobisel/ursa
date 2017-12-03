@@ -13,16 +13,16 @@ class Ursa(Application):
 
     builtin_configuration = """
     db:
-      uri: postgresql://postgres:postgres@localhost/ursa_dev
-      test_uri: postgresql://postgres:postgres@localhost/ursa_test
-      administrative_uri: postgresql://postgres:postgres@localhost/postgres
+      url: postgresql://postgres:postgres@localhost/ursa_dev
+      test_url: postgresql://postgres:postgres@localhost/ursa_test
+      administrative_url: postgresql://postgres:postgres@localhost/postgres
       echo: false
 
     application:
       welcome_url: http://localhost:8081/welcome
     
     network:
-      interfaces_file: /home/mehrdad/workspace/ursa/data/interfaces
+      interfaces_file: %(data_dir)s/interfaces
       default_interface: eth0
     """
 
