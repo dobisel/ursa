@@ -4,6 +4,7 @@ from restfulpy.application import Application
 
 from ursa.authentication import Authenticator
 from ursa.controllers import Root
+from .mockup_data import insert_mockup
 
 __version__ = '0.1.0-planning.0'
 
@@ -35,7 +36,7 @@ class Ursa(Application):
         )
 
     def insert_mockup(self):
-        print('No mockup data yet.')
+        insert_mockup()
 
     def insert_basedata(self):  # pragma: no cover
         print('This project doesn\'t have any base-data.')
