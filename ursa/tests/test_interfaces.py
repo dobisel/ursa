@@ -45,11 +45,13 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['nameServers'], interface.nameservers)
         self.assertEqual(response['networkId'], interface.network)
 
+        self.logout()
+
     def test_put(self):
 
         self.request(
             As.admin, 'PUT', f'{self.url}',
-            expected_status=400
+            expected_status=401
         )
 
         self.request(
@@ -61,7 +63,7 @@ class InterfaceTestCase(WebTestCase):
                 FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
                 FormParameter('networkId', '1.9.9.9'),
             ],
-            expected_status=400
+            expected_status=401
         )
 
         self.login_as_admin()
@@ -116,6 +118,8 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(interface.gateway, '192.168.1.1')
         self.assertEqual(interface.network, '1.9.9.9')
         self.assertEqual(interface.nameservers, '8.8.8.8 9.9.9.9')
+
+        self.logout()
 
 
 if __name__ == '__main__':
