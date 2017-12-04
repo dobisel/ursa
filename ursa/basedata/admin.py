@@ -1,9 +1,9 @@
-
 from restfulpy.orm import DBSession
+
 from ursa.models import Admin
 
 
-def insert_mockup():
+def insert():  # pragma: no cover
     admin = Admin()
     admin.user_name = 'admin'
     admin.password = '123456'
