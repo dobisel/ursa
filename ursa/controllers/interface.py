@@ -19,11 +19,11 @@ class InterfacesController(RestController):
 
             interface_file = open(settings.network.interfaces_file, 'w')
             interface_file.write(f'iface {settings.network.default_interface} inet static\n')
-            interface_file.write('  address \n')
-            interface_file.write('  gateway \n')
-            interface_file.write('  netmask \n')
-            interface_file.write('  network \n')
-            interface_file.write('  nameservers \n')
+            interface_file.write('  address 192.168.1.12\n')
+            interface_file.write('  gateway 192.168.1.1\n')
+            interface_file.write('  netmask 255.255.255.0\n')
+            interface_file.write('  network 192.168.1.0\n')
+            interface_file.write('  nameservers 192.168.1.1\n')
             interface_file.close()
 
         iface = InterfacesFile(settings.network.interfaces_file)

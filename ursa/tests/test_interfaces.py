@@ -30,11 +30,11 @@ class InterfaceTestCase(WebTestCase):
 
         interface_file = open(settings.network.interfaces_file, 'w')
         interface_file.write(f'iface {settings.network.default_interface} inet static\n')
-        interface_file.write('  address \n')
-        interface_file.write('  gateway \n')
-        interface_file.write('  netmask \n')
-        interface_file.write('  network \n')
-        interface_file.write('  nameservers \n')
+        interface_file.write('  address 192.168.1.12\n')
+        interface_file.write('  gateway 192.168.1.1\n')
+        interface_file.write('  netmask 255.255.255.0\n')
+        interface_file.write('  network 192.168.1.0\n')
+        interface_file.write('  nameservers 192.168.1.1\n')
         interface_file.close()
 
     def test_get(self):
@@ -104,6 +104,29 @@ class InterfaceTestCase(WebTestCase):
                 FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
                 FormParameter('networkId', None)
             ]
+        )
+
+        self.request(
+            As.admin, 'PUT', f'{self.url}',
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('nameServers', '8.8.8.8'),
+                FormParameter('networkId', None)
+            ]
+        )
+
+        self.request(
+            As.admin, 'PUT', f'{self.url}',
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('nameServers', '8.8.8.8 9.9.9.9 1.1.1.1'),
+                FormParameter('networkId', None)
+            ],
+            expected_status=400
         )
 
         response, ___ = self.request(
