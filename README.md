@@ -65,6 +65,7 @@ So, your changes will affect instantly on the installed version
     $ git clone git@github.com:Carrene/ursa.git
     $ cd ursa
     $ pip install -e .
+    $ pip install -r requirement.txt 
     
 #### Enabling the bash auto completion for ursa
 
