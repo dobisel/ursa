@@ -4,7 +4,6 @@ from restfulpy.application import Application
 
 from ursa.authentication import Authenticator
 from ursa.controllers import Root
-from .mockup_data import insert_mockup
 from ursa import basedata
 
 __version__ = '0.1.0-planning.0'
