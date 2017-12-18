@@ -23,7 +23,7 @@ class InterfacesController(RestController):
             interface_file.write('  gateway 192.168.1.1\n')
             interface_file.write('  netmask 255.255.255.0\n')
             interface_file.write('  network 192.168.1.0\n')
-            interface_file.write('  nameservers 192.168.1.1\n')
+            interface_file.write('  dns-nameservers 192.168.1.1\n')
             interface_file.close()
 
         iface = InterfacesFile(settings.network.interfaces_file)
@@ -33,7 +33,7 @@ class InterfacesController(RestController):
         response['netmask'] = interface.netmask
         response['gateway'] = interface.gateway
         response['networkId'] = interface.network
-        response['nameServers'] = interface.nameservers
+        response['nameServers'] = interface['dns-nameservers']
         return response
 
     @json
@@ -43,13 +43,29 @@ class InterfacesController(RestController):
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
         name_servers = context.form.get('nameServers')
-        if len(name_servers.split(' ')) > 2:
-            raise HttpBadRequest()
-        interface.nameservers = context.form.get('nameServers')
+
+        if ' ' in name_servers:
+            seprator = ' '
+        elif ',' in name_servers:
+            seprator = ','
+        elif ';' in name_servers:
+            seprator = ';'
+        elif '-' in name_servers:
+            seprator = '-'
+        else:
+            seprator = None
+
+        if seprator is not None:
+            name_servers = ' '.join(name_servers.split(seprator))
+        else:
+            if name_servers == '' or name_servers is None:
+                name_servers = context.form.get('gateway')
+        interface['dns-nameservers'] = name_servers
         interface.address = context.form.get('address')
         interface.netmask = context.form.get('netmask')
         interface.gateway = context.form.get('gateway')
         if name_servers is not None:
             interface.network = context.form.get('networkId')
         iface.save(validate=False)
+        context.form['nameServers'] = name_servers
         return context.form

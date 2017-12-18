@@ -34,7 +34,7 @@ class InterfaceTestCase(WebTestCase):
         interface_file.write('  gateway 192.168.1.1\n')
         interface_file.write('  netmask 255.255.255.0\n')
         interface_file.write('  network 192.168.1.0\n')
-        interface_file.write('  nameservers 192.168.1.1\n')
+        interface_file.write('  dns-nameservers 192.168.1.1\n')
         interface_file.close()
 
     def test_get(self):
@@ -55,7 +55,7 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['address'], interface.address)
         self.assertEqual(response['netmask'], interface.netmask)
         self.assertEqual(response['gateway'], interface.gateway)
-        self.assertEqual(response['nameServers'], interface.nameservers)
+        self.assertEqual(response['nameServers'], interface['dns-nameservers'])
         self.assertEqual(response['networkId'], interface.network)
 
         self.logout()
@@ -117,25 +117,13 @@ class InterfaceTestCase(WebTestCase):
             ]
         )
 
-        self.request(
-            As.admin, 'PUT', f'{self.url}',
-            params=[
-                FormParameter('address', '192.168.1.15'),
-                FormParameter('netmask', '192.168.1.255'),
-                FormParameter('gateway', '192.168.1.1'),
-                FormParameter('nameServers', '8.8.8.8 9.9.9.9 1.1.1.1'),
-                FormParameter('networkId', None)
-            ],
-            expected_status=400
-        )
-
         response, ___ = self.request(
             As.admin, 'PUT', f'{self.url}',
             params=[
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255'),
                 FormParameter('gateway', '192.168.1.1'),
-                FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
+                FormParameter('nameServers', '8.8.8.8,9.9.9.9,1.1.1.1'),
                 FormParameter('networkId', '1.9.9.9'),
             ]
         )
@@ -143,7 +131,7 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['address'], '192.168.1.15')
         self.assertEqual(response['netmask'], '192.168.1.255')
         self.assertEqual(response['gateway'], '192.168.1.1')
-        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9')
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
         self.assertEqual(response['networkId'], '1.9.9.9')
 
         iface = InterfacesFile(settings.network.interfaces_file)
@@ -153,7 +141,32 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(interface.netmask, '192.168.1.255')
         self.assertEqual(interface.gateway, '192.168.1.1')
         self.assertEqual(interface.network, '1.9.9.9')
-        self.assertEqual(interface.nameservers, '8.8.8.8 9.9.9.9')
+        self.assertEqual(interface['dns-nameservers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        response, ___ = self.request(
+            As.admin, 'PUT', f'{self.url}',
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('nameServers', ''),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+        self.assertEqual(response['address'], '192.168.1.15')
+        self.assertEqual(response['netmask'], '192.168.1.255')
+        self.assertEqual(response['gateway'], '192.168.1.1')
+        self.assertEqual(response['nameServers'], '192.168.1.1')
+        self.assertEqual(response['networkId'], '1.9.9.9')
+
+        iface = InterfacesFile(settings.network.interfaces_file)
+        interface = iface.get_iface('eth0')
+
+        self.assertEqual(interface.address, '192.168.1.15')
+        self.assertEqual(interface.netmask, '192.168.1.255')
+        self.assertEqual(interface.gateway, '192.168.1.1')
+        self.assertEqual(interface.network, '1.9.9.9')
+        self.assertEqual(interface['dns-nameservers'], '192.168.1.1')
 
         self.logout()
 
