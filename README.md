@@ -9,11 +9,6 @@ Ursa
 [![Build Status](https://travis-ci.com/Carrene/ursa.svg?token=HWnTqWuJD5Ap9uCZHQqx&branch=master)](https://travis-ci.com/Carrene/ursa)
 [![Coverage Status](https://coveralls.io/repos/github/Carrene/ursa/badge.svg?branch=master&t=9vAMne)](https://coveralls.io/github/Carrene/ursa?branch=master)
 
-### develop
-
-[![Build Status](https://travis-ci.com/Carrene/ursa.svg?token=HWnTqWuJD5Ap9uCZHQqx&branch=develop)](https://travis-ci.com/Carrene/ursa)
-[![Coverage Status](https://coveralls.io/repos/github/Carrene/ursa/badge.svg?branch=develop&t=9vAMne)](https://coveralls.io/github/Carrene/ursa?branch=develop)
-
 
 Setting up development Environment on Linux
 ----------------------------------
@@ -263,63 +258,3 @@ This command will generate the Mark-Down documents which are needed for Front-en
     (ursa) /path/to/ursa > ursa serve
 ```
 
-
-## Change Log
-
-##### 1.0.0-a20
-
-- Update secrets in config files [#42](/../../issues/42)
-- Discount batch update [#45](/../../issues/45)
-- Export To XML [#20](/../../issues/20)
-- Remove access control allow origin headers from production env [#41](/../../issues/41)
-- SSL (Self-Signed) [#43](/../../issues/43)
-- Store refresh token as secure cookie. [#44](/../../issues/44)
-- gzip, deflate [#67](/../../issues/67)
-
-##### 1.0.0-a12
-
-- Importing newly received basedata [#65](/../../issues/65)
-- When a Text, Phone, or Email Appoitment Reminder bundle (e.g. SubBunApptRmdrText1200) is selected, all other appointment reminder types become inactive [#69](/../../../beaver/issues/69)
-
-##### 1.0.0-a10
-
-- Assert Is_active for members. [#62](/../../issues/62)
-- Include `availableByBundles` array in `contracts/{id}transactions` JSON result [#63](/../../issues/63)
-- Keep alive ping/echo for websocket clients. [#59](/../../issues/59)
-- Separate real data from mockup data. [#61](/../../issues/61)
-- Zipcode entity. [#60](/../../issues/60)
-
-##### 1.0.0-a7
-
-- Sending email on notifications [#38](/../../issues/38)
-- Logging [#53](/../../issues/53)
-- Resolve all warnings [#54](/../../issues/54)
-- Email templates. [#55](/../../issues/55)
-- Dispatch messages to connected websockets. [#14](/../../issues/14)
-
-##### 1.0.0-a5
-
-- Dispatch messages to connected websocket clients [#14](/../../issues/14)
-- Remove title from contact [#46](/../../issues/46)
-- Mockup, Services: Remove the word "Fee" from options [#48](/../../issues/48)
-- Include partial package object in contract JSON [#49](/../../issues/49)
-- Assume bundle as multi select product [#51](/../../issues/51)
-- Better mockup data [#47](/../../issues/47)
-- Assume package as product [#50](/../../issues/50)
-- Make products, Orderable [#52](/../../issues/52)
-
-
-##### 1.0.0-a4
-
-- Better handling of contract status updates [#36](/../../issues/36)
-
-##### 1.0.0-a3
-
-- Refresh token [#15](/../../issues/15)
-
-##### 1.0.0-a2
-
-- Real Mockup Data: [#19](/../../issues/19)
-- Send notification if `Contract.status` is changed: [#36](/../../issues/36)
-- Reduce contract JSON bundle size [#39](/../../issues/39)
-- Do not raise 409(HttpConflict) when selecting package while it's module is already selected, just remove the module [#40](/../../issues/40)
