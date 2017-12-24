@@ -7,7 +7,7 @@ Ursa
 ### master
 
 [![Build Status](https://travis-ci.com/Carrene/ursa.svg?token=HWnTqWuJD5Ap9uCZHQqx&branch=master)](https://travis-ci.com/Carrene/ursa)
-[![Coverage Status](https://coveralls.io/repos/github/Carrene/ursa/badge.svg?branch=master&t=9vAMne)](https://coveralls.io/github/Carrene/ursa?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/Carrene/ursa/badge.svg?branch=master&t=MDoOU3)](https://coveralls.io/github/Carrene/ursa?branch=master)
 
 
 Setting up development Environment on Linux
