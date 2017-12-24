@@ -27,3 +27,4 @@ pip3 install -U pip setuptools wheel coverage coveralls
 pip3 install "git+https://github.com/pylover/nanohttp@develop"
 pip3 install "git+https://github.com/pylover/restfulpy@develop"
 pip3 install --no-cache -e .
+pip3 install -r requirement.txt
