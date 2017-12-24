@@ -1,0 +1,31 @@
+
+env:
+  global:
+    - COMMIT_AUTHOR_EMAIL: mehrdad@carrene.com
+    - ENCRYPTION_LABEL: ede939d51636
+
+language: python
+
+dist: trusty
+sudo: false
+python: "3.6"
+
+
+addons:
+  apt:
+    sources:
+      - precise-pgdg-9.5
+    packages:
+      - postgresql-9.5
+      - postgresql-contrib-9.5
+      - libpq-dev
+  postgresql: 9.5
+
+services:
+  - redis-server
+
+install: ./scripts/travis-install.sh
+script: coverage run --source ursa $(which nosetests)
+after_success:
+  - coveralls
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then ./scripts/travis-upload-wiki.sh ; fi
