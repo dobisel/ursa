@@ -8,17 +8,17 @@ Preparation
 ### Prerequicites:
 
 ```bash
-sudo apt-get install build-essential python3-pip postgresql libpq-dev
+sudo apt-get install nginx build-essential python3-pip postgresql libpq-dev
 ```
 
 ### Python3.6
 
 ```bash
 sudo apt build-dep python3.5
-sudo cd /tmp
-sudo wget https://www.python.org/ftp/python/3.6.3/Python-3.6.3.tar.xz
-sudo tar -xvf Python-3.6.3.tar.xz
-sudo cd Python-3.6.3
+cd /tmp
+sudo wget https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tar.xz
+sudo tar -xvf Python-3.6.*.tar.xz
+cd Python-3.6.*
 sudo ./configure
 sudo make -j4
 sudo make altinstall
@@ -27,8 +27,8 @@ sudo make altinstall
 ### Virtual env
 
 ```bash
-sudo pip3 install -U pip setuptools wheel
-sudo pip3 install virtualenvwrapper
+sudo pip3.6 install -U pip setuptools wheel
+sudo pip3.6 install virtualenvwrapper
 ``` 
 
 ##### Create and login as `dev` user
@@ -42,6 +42,21 @@ echo "alias v.activate=\"source $(which virtualenvwrapper.sh)\"" >> ~/.bashrc
 source ~/.bashrc
 v.activate
 mkvirtualenv --python=$(which python3.6) --no-site-packages ursa
+```
+##### SSH Configuration
+
+```bash
+if [ -e ~/.ssh ]; then mkdir ~/.ssh; fi
+ssh-keygen -f ~/.ssh/github-ursa-rsa
+```
+Copy the `github-ursa-rsa.pub` into the github web interface
+on deploy keys of your repository
+settings.
+
+Registering keys
+
+```bash
+echo -e "Host github-wolf\n  User git\n  HostName github.com\n  IdentityFile /root/.ssh/github-ursa-rsa" >> ~/.ssh/config
 ```
 
 ##### Setup Database
@@ -58,29 +73,36 @@ echo "ALTER USER dev WITH PASSWORD 'password'" | sudo -u postgres psql
 Create a file `~/.config/ursa.yml` with this contents:
 
 ```yaml
-      url: postgresql://postgres:postgres@localhost/ursa_dev
-      test_url: postgresql://postgres:postgres@localhost/ursa_test
-      administrative_url: postgresql://postgres:postgres@localhost/postgres
-      echo: false
-    application:
-      welcome_url: http://localhost:8081/welcome
+db:
+  url: postgresql://dev:password@localhost/ursa
+
+  echo: false
+application:
+  welcome_url: http://localhost:8081/welcome
     
-    network:
-      interfaces_file: /etc/network/interfaces
-      default_interface: eth0
+network:
+  interfaces_dir:  /etc/network
+  interfaces_file: /etc/network/interfaces
+  default_interface: enp0s3
 ```
 
-### Install
+### Cloning and Install
 
 ```bash
-su - dev
-mkdir ~/workspace/ursa
+cd ~/workspace
+git clone ssh://git@github.com:Carrene/ursa.git
 cd ~/workspace/ursa
 v.activate && workon ursa
-pip install -e .
+sudo pip install -e .
 ```
 
-##### Database objects
+#### Install Network Interfaces
+
+```bash
+sudo pip3.6 install git+ssh://git@github.com:Carrene/network-interfaces.git
+```
+
+#### Database objects
 
 ```bash
 v.activate && workon ursa
@@ -89,7 +111,7 @@ ursa admin base-data
 ursa admin mockup-data  #  if desirable
 ```
 
-###### Systemd
+##### Systemd
 
 /etc/systemd/system/ursa.service:
 
@@ -112,7 +134,6 @@ PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
-
 ```
 
 /etc/systemd/system/ursa.socket:
@@ -139,19 +160,21 @@ d /run/ursa 0755 dev dev -
 Next enable the services so they autostart at boot:
 
 ```bash
-systemd-tmpfiles --create
-systemctl daemon-reload
-systemctl enable ursa.socket
-service ursa start
+sudo systemd-tmpfiles --create
+sudo systemctl daemon-reload
+sudo systemctl enable ursa.socket
+sudo service ursa start
 ```
 
 Either reboot, or start the services manually:
 
 ```bash
-systemctl start ursa.socket
+sudo systemctl start ursa.socket
 ```
 
 ### NGINX
+
+`/etc/nginx/sites-available/ursa`
 
 ```
 upstream ursa_webapi {
@@ -186,3 +209,30 @@ server {
 
     
 }
+```
+#### Restart Nginx
+
+```bash
+sudo rm /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/wolf /etc/nginx/sites-enabled/
+sudo service nginx restart
+```
+
+### Iptables
+
+```bash
+sudo iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A INPUT -s 127.0.0.0/8 -d 127.0.0.0/8 -i lo -j ACCEPT
+sudo iptables -A INPUT -p tcp -m tcp --sport 1025:65535 --dport 22 -m state --state NEW -j ACCEPT
+sudo iptables -A INPUT -p tcp -m tcp --sport 1025:65535 --dport 80 -m state --state NEW -j ACCEPT
+sudo iptables -A INPUT -p icmp --icmp-type 8 -s 0/0 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A OUTPUT -p icmp --icmp-type 0 -d 0/0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -P INPUT DROP
+sudo iptables-save > /etc/iptables/rules.v4
+```
+
+## Reboot the device!
+
+```bash
+reboot
+```
