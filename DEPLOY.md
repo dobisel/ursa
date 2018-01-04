@@ -165,12 +165,12 @@ server {
     listen 80;
 
     location / {
-        try_files $uri $uri/ @rewrites;
+      try_files $uri $uri/ @rewrites;
     }
     
     location ~ /static/(.*) {
-        include /etc/nginx/mime.types;
-        alias /usr/local/ursa/static/$1;
+      include /etc/nginx/mime.types;
+      alias /usr/local/ursa/static/$1;
     }
 
     location @rewrites {
