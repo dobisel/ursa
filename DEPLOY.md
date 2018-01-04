@@ -35,9 +35,8 @@ pip3.6 install -U pip setuptools wheel
 ##### Setup Database
 
 ```bash
-adduser --system --disabled-password --disabled-login ursa
-echo 'CREATE USER ursa' | sudo -u postgres psql
-echo 'CREATE DATABASE ursa WITH owner ursa' | sudo -u postgres psql
+echo 'CREATE USER root' | sudo -u postgres psql
+echo 'CREATE DATABASE ursa WITH owner root' | sudo -u postgres psql
 ```
 
 ##### Config file
@@ -58,9 +57,8 @@ network:
   default_interface: enp0s3
 ```
 
-### Cloning and Install
+###Install
 Go to your ursa repository on your workspace
-
 ```bash
 cd path/to/ursa
 git archive --format tar origin/master | ssh root@ursa-sandbox 'tar -xv -C /usr/local/ursa'
@@ -86,23 +84,12 @@ pip3.6 install /tmp/network-interfaces.tar.gz
 
 ```
 
-#### Database authentication
-
-```bash
-sudo -u postgres psql postgres
-\password 
-```
-Type `postgres`
-Type `postgres` again
-```bash
-\q 
-```
 
 #### Database objects
 
 ```bash
 v.activate && workon ursa
-ursa -c /etc/ursa.yml admin create-db --drop --basdata
+ursa -c /etc/ursa.yml admin create-db --drop --basedata
 ```
 
 ##### Systemd
@@ -117,11 +104,9 @@ After=network.target
 
 [Service]
 PIDFile=/run/ursa/pid
-User=dev
-Group=dev
-WorkingDirectory=/home/dev/workspace/ursa/
-#ExecStartPre=/bin/mkdir /run/ursa && /bin/chown dev:dev /run/ursa
-ExecStart=/home/dev/.virtualenvs/ursa/bin/gunicorn -w 1 --pid /run/ursa/pid -b unix:/run/ursa.socket wsgi_production:app
+User=root
+WorkingDirectory=/usr/local/ursa/
+ExecStart=/usr/local/bin/gunicorn -w 1 --pid /run/ursa/pid -b unix:/run/ursa.socket wsgi_production:app
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true
@@ -138,8 +123,6 @@ Description=ursa socket
 
 [Socket]
 ListenStream=/run/ursa.socket
-#ListenStream=0.0.0.0:9000
-#ListenStream=[::]:8000
 
 [Install]
 WantedBy=sockets.target
@@ -148,27 +131,27 @@ WantedBy=sockets.target
 /usr/lib/tmpfiles.d/ursa.conf:
 
 ```
-d /run/ursa 0755 dev dev -
+d /run/ursa 0755 root root -
 ```
 
 Next enable the services so they autostart at boot:
 
 ```bash
-sudo systemd-tmpfiles --create
-sudo systemctl daemon-reload
-sudo systemctl enable ursa.socket
-sudo service ursa start
+systemd-tmpfiles --create
+systemctl daemon-reload
+systemctl enable ursa.socket
+service ursa start
 ```
 
 Either reboot, or start the services manually:
 
 ```bash
-sudo systemctl start ursa.socket
+systemctl start ursa.socket
 ```
 
 ### NGINX
 
-`/etc/nginx/sites-available/ursa`
+/etc/nginx/sites-available/ursa
 
 ```
 upstream ursa_webapi {
@@ -187,7 +170,7 @@ server {
     
     location ~ /static/(.*) {
         include /etc/nginx/mime.types;
-        alias /home/dev/workspace/ursa/static/$1;
+        alias /usr/local/ursa/static/$1;
     }
 
     location @rewrites {
@@ -207,22 +190,9 @@ server {
 #### Restart Nginx
 
 ```bash
-sudo rm /etc/nginx/sites-enabled/default
-sudo ln -s /etc/nginx/sites-available/wolf /etc/nginx/sites-enabled/
-sudo service nginx restart
-```
-
-### Iptables
-
-```bash
-sudo iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-sudo iptables -A INPUT -s 127.0.0.0/8 -d 127.0.0.0/8 -i lo -j ACCEPT
-sudo iptables -A INPUT -p tcp -m tcp --sport 1025:65535 --dport 22 -m state --state NEW -j ACCEPT
-sudo iptables -A INPUT -p tcp -m tcp --sport 1025:65535 --dport 80 -m state --state NEW -j ACCEPT
-sudo iptables -A INPUT -p icmp --icmp-type 8 -s 0/0 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -A OUTPUT -p icmp --icmp-type 0 -d 0/0 -m state --state ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -P INPUT DROP
-sudo iptables-save > /etc/iptables/rules.v4
+rm /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/ursa /etc/nginx/sites-enabled/
+service nginx restart
 ```
 
 ## Reboot the device!
