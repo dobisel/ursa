@@ -30,11 +30,11 @@ class InterfacesController(RestController):
         interface = iface.get_iface(settings.network.default_interface)
         response = dict()
 
-        response['address'] = interface.address if hasattr(interface, 'address') else ''
-        response['netmask'] = interface.netmask if hasattr(interface, 'netmask') else ''
-        response['gateway'] = interface.gateway if hasattr(interface, 'gateway') else ''
-        response['networkId'] = interface.network if hasattr(interface, 'network') else ''
-        response['nameServers'] = interface['dns-nameservers'] if hasattr(interface, 'dns-nameservers') else ''
+        response['address'] = getattr(interface, 'address', None)
+        response['netmask'] = getattr(interface, 'netmask', None)
+        response['gateway'] = getattr(interface, 'gateway', None)
+        response['networkId'] = getattr(interface, 'network', None)
+        response['nameServers'] = getattr(interface, 'dns-nameservers', None)
         return response
 
     @json
