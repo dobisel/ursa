@@ -29,11 +29,12 @@ class InterfacesController(RestController):
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
         response = dict()
-        response['address'] = interface.address
-        response['netmask'] = interface.netmask
-        response['gateway'] = interface.gateway
-        response['networkId'] = interface.network
-        response['nameServers'] = interface['dns-nameservers']
+
+        response['address'] = getattr(interface, 'address', None)
+        response['netmask'] = getattr(interface, 'netmask', None)
+        response['gateway'] = getattr(interface, 'gateway', None)
+        response['networkId'] = getattr(interface, 'network', None)
+        response['nameServers'] = getattr(interface, 'dns-nameservers', None)
         return response
 
     @json
