@@ -21,6 +21,7 @@ class InterfacesController(RestController):
             interface_file.write(f'iface {settings.network.default_interface} inet static\n')
             interface_file.write('  address 192.168.1.12\n')
             interface_file.write('  gateway 192.168.1.1\n')
+            interface_file.write('  broadcast 192.168.1.255\n')
             interface_file.write('  netmask 255.255.255.0\n')
             interface_file.write('  network 192.168.1.0\n')
             interface_file.write('  dns-nameservers 192.168.1.1\n')
@@ -29,16 +30,18 @@ class InterfacesController(RestController):
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
         response = dict()
-        response['address'] = interface.address
-        response['netmask'] = interface.netmask
-        response['gateway'] = interface.gateway
-        response['networkId'] = interface.network
-        response['nameServers'] = interface['dns-nameservers']
+
+        response['address'] = getattr(interface, 'address', None)
+        response['netmask'] = getattr(interface, 'netmask', None)
+        response['gateway'] = getattr(interface, 'gateway', None)
+        response['broadcast'] = getattr(interface, 'broadcast', None)
+        response['networkId'] = getattr(interface, 'network', None)
+        response['nameServers'] = getattr(interface, 'dns-nameservers', None)
         return response
 
     @json
     @authorize('admin')
-    @validate_form(exact=['address', 'netmask', 'gateway', 'nameServers', 'networkId'])
+    @validate_form(exact=['address', 'netmask', 'gateway', 'broadcast', 'nameServers', 'networkId'])
     def put(self):
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
@@ -60,10 +63,12 @@ class InterfacesController(RestController):
         else:
             if name_servers == '' or name_servers is None:
                 name_servers = context.form.get('gateway')
+
         interface['dns-nameservers'] = name_servers
         interface.address = context.form.get('address')
         interface.netmask = context.form.get('netmask')
         interface.gateway = context.form.get('gateway')
+        interface.broadcast = context.form.get('broadcast')
         if name_servers is not None:
             interface.network = context.form.get('networkId')
         iface.save(validate=False)
