@@ -64,6 +64,10 @@ class InterfacesController(RestController):
             if name_servers == '' or name_servers is None:
                 name_servers = context.form.get('gateway')
 
+        for attr in ['dns-nameservers', 'address', 'netmask', 'gateway', 'broadcast', 'network']:
+            if hasattr(interface, attr):
+                setattr(interface, attr, '')
+
         interface['dns-nameservers'] = name_servers
         interface.address = context.form.get('address')
         interface.netmask = context.form.get('netmask')
