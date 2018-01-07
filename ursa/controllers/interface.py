@@ -43,34 +43,48 @@ class InterfacesController(RestController):
     @authorize('admin')
     @validate_form(exact=['address', 'netmask', 'gateway', 'broadcast', 'nameServers', 'networkId'])
     def put(self):
+        if context.form.get('address') is None or context.form.get('address') == '' or\
+                context.form.get('netmask') is None or context.form.get('netmask') == '':
+            raise HttpBadRequest()
+
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
+
+        for attr in ['dns-nameservers', 'address', 'netmask', 'gateway', 'broadcast', 'network']:
+            if hasattr(interface, attr):
+                setattr(interface, attr, '')
+
         name_servers = context.form.get('nameServers')
 
-        if ' ' in name_servers:
-            seprator = ' '
-        elif ',' in name_servers:
-            seprator = ','
-        elif ';' in name_servers:
-            seprator = ';'
-        elif '-' in name_servers:
-            seprator = '-'
-        else:
-            seprator = None
+        if name_servers is not None:
+            if ' ' in name_servers:
+                seprator = ' '
+            elif ',' in name_servers:
+                seprator = ','
+            elif ';' in name_servers:
+                seprator = ';'
+            elif '-' in name_servers:
+                seprator = '-'
+            else:
+                seprator = None
 
-        if seprator is not None:
-            name_servers = ' '.join(name_servers.split(seprator))
-        else:
-            if name_servers == '' or name_servers is None:
-                name_servers = context.form.get('gateway')
+            if seprator is not None:
+                name_servers = ' '.join(name_servers.split(seprator))
 
-        interface['dns-nameservers'] = name_servers
+            interface['dns-nameservers'] = name_servers
+
         interface.address = context.form.get('address')
         interface.netmask = context.form.get('netmask')
-        interface.gateway = context.form.get('gateway')
-        interface.broadcast = context.form.get('broadcast')
-        if name_servers is not None:
+
+        if context.form.get('gateway') is not None:
+            interface.gateway = context.form.get('gateway')
+
+        if context.form.get('broadcast') is not None:
+            interface.broadcast = context.form.get('broadcast')
+
+        if context.form.get('networkId') is not None:
             interface.network = context.form.get('networkId')
+
         iface.save(validate=False)
         context.form['nameServers'] = name_servers
         return context.form
