@@ -166,7 +166,7 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['netmask'], '192.168.1.255')
         self.assertEqual(response['gateway'], '192.168.1.1')
         self.assertEqual(response['broadcast'], '192.168.1.255')
-        self.assertEqual(response['nameServers'], '192.168.1.1')
+        self.assertEqual(response['nameServers'], '')
         self.assertEqual(response['networkId'], '1.9.9.9')
 
         iface = InterfacesFile(settings.network.interfaces_file)
@@ -177,7 +177,46 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(interface.gateway, '192.168.1.1')
         self.assertEqual(interface.broadcast, '192.168.1.255')
         self.assertEqual(interface.network, '1.9.9.9')
-        self.assertEqual(interface['dns-nameservers'], '192.168.1.1')
+
+        # Invalid address
+        self.request(
+            As.admin, 'PUT', f'{self.url}',
+            params=[
+                FormParameter('address', ''),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', ''),
+                FormParameter('networkId', '1.9.9.9'),
+            ],
+            expected_status=400
+        )
+
+        # Update only require fields
+        response, ___ = self.request(
+            As.admin, 'PUT', f'{self.url}',
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', ''),
+                FormParameter('broadcast', ''),
+                FormParameter('nameServers', ''),
+                FormParameter('networkId', ''),
+            ]
+        )
+
+        self.assertEqual(response['address'], '192.168.1.15')
+        self.assertEqual(response['netmask'], '192.168.1.255')
+        self.assertEqual(response['gateway'], '')
+        self.assertEqual(response['broadcast'], '')
+        self.assertEqual(response['nameServers'], '')
+        self.assertEqual(response['networkId'], '')
+
+        iface = InterfacesFile(settings.network.interfaces_file)
+        interface = iface.get_iface('eth0')
+
+        self.assertEqual(interface.address, '192.168.1.15')
+        self.assertEqual(interface.netmask, '192.168.1.255')
 
         self.logout()
 
