@@ -42,4 +42,5 @@ class Ursa(Application):
     def insert_basedata(self):  # pragma: no cover
         basedata.insert()
 
+
 ursa = Ursa()
