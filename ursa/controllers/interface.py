@@ -1,7 +1,8 @@
 
-import os.path
+import os
+from os import path
 
-from nanohttp import RestController, json, context, settings, HttpBadRequest
+from nanohttp import RestController, json, context, settings, HttpBadRequest, HttpConflict
 from restfulpy.authorization import authorize
 from restfulpy.validation import validate_form
 from network_interfaces import InterfacesFile
@@ -9,28 +10,32 @@ from network_interfaces import InterfacesFile
 
 class InterfacesController(RestController):
 
+    @classmethod
+    def ensure_interfaces_file(cls):
+        os.makedirs(path.dirname(settings.network.interfaces_file), exist_ok=True)
+        if not path.exists(settings.network.interfaces_file):
+            with open(settings.network.interfaces_file, 'w') as interface_file:
+                interface_file.writelines([
+                    f'iface {settings.network.default_interface} inet static\n',
+                    '  address 192.168.1.12\n',
+                    '  gateway 192.168.1.1\n',
+                    '  broadcast 192.168.1.255\n',
+                    '  netmask 255.255.255.0\n',
+                    '  network 192.168.1.0\n',
+                    '  dns-nameservers 192.168.1.1\n',
+                ])
+
     @json
     @authorize('admin')
     def get(self):
+        self.ensure_interfaces_file()
+        interfaces = InterfacesFile(settings.network.interfaces_file)
+        try:
+            interface = interfaces.get_iface(settings.network.default_interface)
+        except KeyError:
+            raise HttpConflict(f'interface {settings.network.default_interface} not found.')
 
-        if not os.path.isfile(settings.network.interfaces_file):
-            if not os.path.isdir(settings.network.interfaces_dir):
-                os.makedirs(settings.network.interfaces_dir)
-
-            interface_file = open(settings.network.interfaces_file, 'w')
-            interface_file.write(f'iface {settings.network.default_interface} inet static\n')
-            interface_file.write('  address 192.168.1.12\n')
-            interface_file.write('  gateway 192.168.1.1\n')
-            interface_file.write('  broadcast 192.168.1.255\n')
-            interface_file.write('  netmask 255.255.255.0\n')
-            interface_file.write('  network 192.168.1.0\n')
-            interface_file.write('  dns-nameservers 192.168.1.1\n')
-            interface_file.close()
-
-        iface = InterfacesFile(settings.network.interfaces_file)
-        interface = iface.get_iface(settings.network.default_interface)
         response = dict()
-
         response['address'] = getattr(interface, 'address', None)
         response['netmask'] = getattr(interface, 'netmask', None)
         response['gateway'] = getattr(interface, 'gateway', None)
@@ -47,6 +52,7 @@ class InterfacesController(RestController):
                 context.form.get('netmask') is None or context.form.get('netmask') == '':
             raise HttpBadRequest()
 
+        self.ensure_interfaces_file()
         iface = InterfacesFile(settings.network.interfaces_file)
         interface = iface.get_iface(settings.network.default_interface)
 

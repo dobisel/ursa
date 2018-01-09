@@ -9,7 +9,7 @@ Preparation
 
 ```bash
 sudo su -
-apt install nginx build-essential python3-pip postgresql libpq-dev
+apt install nginx build-essential python3-pip postgresql libpq-dev redis-server
 ```
 
 ### Python3.6
