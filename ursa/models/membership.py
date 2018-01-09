@@ -1,7 +1,6 @@
+import os
 import uuid
 from _sha256 import sha256
-
-import os
 
 from nanohttp import HttpBadRequest, context, HttpUnauthorized
 from restfulpy.orm import ModifiedMixin, DeclarativeBase, Field
@@ -14,7 +13,7 @@ class Member(ModifiedMixin, DeclarativeBase):
     __tablename__ = 'member'
 
     id = Field(Integer, primary_key=True)
-    user_name = Field(Unicode(64),index=True, min_length=4, label='User Name', json='userName')
+    username = Field(Unicode(64), index=True, min_length=4, label='Username', unique=True)
 
     _password = Field(
         'password', Unicode(128), index=True, json='password', protected=True, min_length=4, label='Password'
@@ -74,14 +73,13 @@ class Member(ModifiedMixin, DeclarativeBase):
         return self.password[64:] == hashed_pass.hexdigest()
 
     def create_jwt_principal(self, session_id=None):
-        # FIXME: IMPORTANT Include user password as salt in signature
 
         if session_id is None:
             session_id = str(uuid.uuid4())
 
         return JwtPrincipal(dict(
             id=self.id,
-            userName=self.user_name,
+            username=self.username,
             roles=self.roles,
             sessionId=session_id
         ))
@@ -91,7 +89,7 @@ class Member(ModifiedMixin, DeclarativeBase):
         if context.identity is None:
             raise HttpUnauthorized()
 
-        return cls.query.filter(cls.user_name == context.identity.userName).one()
+        return cls.query.filter(cls.username == context.identity.username).one()
 
     def change_password(self, current_password, new_password):
         if not self.validate_password(current_password):

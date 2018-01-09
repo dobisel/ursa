@@ -1,5 +1,4 @@
 from restfulpy.authentication import StatefulAuthenticator
-from restfulpy.orm import DBSession
 
 from ursa.models import Member
 
@@ -15,8 +14,8 @@ class Authenticator(StatefulAuthenticator):
         return member.create_refresh_principal()
 
     def validate_credentials(self, credentials):
-        user_name, password = credentials
-        member = Member.query.filter(Member.user_name == user_name).one_or_none()
+        username, password = credentials
+        member = Member.query.filter(Member.username == username).one_or_none()
         if member is None or not member.validate_password(password):
             return None
         return member

@@ -56,36 +56,19 @@ network:
   interfaces_file: /etc/network/interfaces
   default_interface: enp0s3
 ```
+Copy your project to `/usr/local/ursa`
 
-###Install
-
-Create a directory in `/usr/local/ursa`
-
-Go on your workspace
-```bash
-cd path/to/ursa
-git archive --format tar origin/master | ssh root@ursa-sandbox 'tar -xv -C /usr/local/ursa'
-```
-
-On server
 ```bash
 cd /usr/local/ursa
 pip3.6 install -e .
 ```
 
 #### Install Network Interfaces
-Go to your network-interfaces repository on your workspace
-
-```bash
-cd path/to/network-interfaces
-git archive --format tar.gz origin/master | ssh root@ursa-sandbox 'cat - > /tmp/network-interfaces.tar.gz'
-```
-On server
+Copy `network-interfaces.tar.gz` project to `/tmp`
 ```bash
 pip3.6 install /tmp/network-interfaces.tar.gz 
 
 ```
-
 
 #### Database objects
 
