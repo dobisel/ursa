@@ -4,12 +4,14 @@ from restfulpy.authorization import authorize
 from restfulpy.controllers import RootController
 
 import ursa
-from .network import NetworkController
-from .sessions import SessionsController
+from ursa.controllers.system import SystemController
+from ursa.controllers.network import NetworkController
+from ursa.controllers.sessions import SessionsController
 
 
 class ApiV1(RestController):
     network = NetworkController()
+    system = SystemController()
     sessions = SessionsController()
 
     @json

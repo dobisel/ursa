@@ -25,6 +25,11 @@ class Ursa(Application):
     network:
       interfaces_file: %(data_dir)s/interfaces
       default_interface: eth0
+      
+    system_manager:
+      default: ursa.system.SystemManager
+      reboot_command: sleep 1;/sbin/reboot
+      shutdown_command: sleep 1;/sbin/poweroff
     """
 
     def __init__(self):
