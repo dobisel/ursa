@@ -157,7 +157,7 @@ server {
     
     location ~ /static/(.*) {
       include /etc/nginx/mime.types;
-      alias /usr/local/ursa/static/$1;
+      alias /usr/local/octopus/static/$1;
     }
 
     location @rewrites {

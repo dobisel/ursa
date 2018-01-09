@@ -35,7 +35,7 @@ class Ursa(Application):
             version=__version__,
         )
 
-    def insert_mockup(self):
+    def insert_mockup(self):  # pragma: no cover
         print('No mockup data.')
 
     def insert_basedata(self):  # pragma: no cover

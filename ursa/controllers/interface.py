@@ -11,7 +11,7 @@ from network_interfaces import InterfacesFile
 class InterfacesController(RestController):
 
     @classmethod
-    def ensure_interfaces_file(cls):
+    def ensure_interfaces(cls):
         os.makedirs(path.dirname(settings.network.interfaces_file), exist_ok=True)
         if not path.exists(settings.network.interfaces_file):
             with open(settings.network.interfaces_file, 'w') as interface_file:
@@ -25,15 +25,19 @@ class InterfacesController(RestController):
                     '  dns-nameservers 192.168.1.1\n',
                 ])
 
+        return InterfacesFile(settings.network.interfaces_file)
+
+    def ensure_default_interface(self, interfaces=None):
+        interfaces = interfaces or self.ensure_interfaces()
+        try:
+            return interfaces.get_iface(settings.network.default_interface)
+        except KeyError:
+            raise HttpConflict(f'interface {settings.network.default_interface} not found.')
+
     @json
     @authorize('admin')
     def get(self):
-        self.ensure_interfaces_file()
-        interfaces = InterfacesFile(settings.network.interfaces_file)
-        try:
-            interface = interfaces.get_iface(settings.network.default_interface)
-        except KeyError:
-            raise HttpConflict(f'interface {settings.network.default_interface} not found.')
+        interface = self.ensure_default_interface()
 
         response = dict()
         response['address'] = getattr(interface, 'address', None)
@@ -52,9 +56,8 @@ class InterfacesController(RestController):
                 context.form.get('netmask') is None or context.form.get('netmask') == '':
             raise HttpBadRequest()
 
-        self.ensure_interfaces_file()
-        iface = InterfacesFile(settings.network.interfaces_file)
-        interface = iface.get_iface(settings.network.default_interface)
+        interfaces = self.ensure_interfaces()
+        interface = self.ensure_default_interface(interfaces)
 
         for attr in ['dns-nameservers', 'address', 'netmask', 'gateway', 'broadcast', 'network']:
             if hasattr(interface, attr):
@@ -64,18 +67,18 @@ class InterfacesController(RestController):
 
         if name_servers is not None:
             if ' ' in name_servers:
-                seprator = ' '
+                separator = ' '
             elif ',' in name_servers:
-                seprator = ','
+                separator = ','
             elif ';' in name_servers:
-                seprator = ';'
+                separator = ';'
             elif '-' in name_servers:
-                seprator = '-'
+                separator = '-'
             else:
-                seprator = None
+                separator = None
 
-            if seprator is not None:
-                name_servers = ' '.join(name_servers.split(seprator))
+            if separator is not None:
+                name_servers = ' '.join(name_servers.split(separator))
 
             interface['dns-nameservers'] = name_servers
 
@@ -91,6 +94,6 @@ class InterfacesController(RestController):
         if context.form.get('networkId') is not None:
             interface.network = context.form.get('networkId')
 
-        iface.save(validate=False)
+        interfaces.save(validate=False)
         context.form['nameServers'] = name_servers
         return context.form

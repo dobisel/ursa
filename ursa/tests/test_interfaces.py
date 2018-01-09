@@ -28,14 +28,12 @@ class InterfaceTestCase(WebTestCase):
             os.remove(settings.network.interfaces_file)
 
     def test_none_existing_interface(self):
-        preserved_default_interface = settings.network.default_interface
-        settings.network.default_interface = 'NotExistingInterface'
         self.login_as_admin()
+        self.request(As.admin, 'GET', self.url)
         try:
-            self.request(
-                As.admin, 'GET', self.url,
-                expected_status=409
-            )
+            preserved_default_interface = settings.network.default_interface
+            settings.network.default_interface = 'NotExistingInterface'
+            self.request(As.admin, 'GET', self.url, expected_status=409)
         finally:
             settings.network.default_interface = preserved_default_interface
 
@@ -97,30 +95,6 @@ class InterfaceTestCase(WebTestCase):
                 FormParameter('netmask', '192.168.1.255')
             ],
             expected_status=400
-        )
-
-        self.request(
-            As.admin, 'PUT', self.url,
-            params=[
-                FormParameter('address', '192.168.1.15'),
-                FormParameter('netmask', '192.168.1.255'),
-                FormParameter('gateway', '192.168.1.1'),
-                FormParameter('broadcast', '192.168.1.255'),
-                FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
-                FormParameter('networkId', '')
-            ]
-        )
-
-        self.request(
-            As.admin, 'PUT', self.url,
-            params=[
-                FormParameter('address', '192.168.1.15'),
-                FormParameter('netmask', '192.168.1.255'),
-                FormParameter('gateway', '192.168.1.1'),
-                FormParameter('broadcast', '192.168.1.255'),
-                FormParameter('nameServers', '8.8.8.8'),
-                FormParameter('networkId', '')
-            ]
         )
 
         response, ___ = self.request(
@@ -221,6 +195,68 @@ class InterfaceTestCase(WebTestCase):
 
         self.logout()
 
+    def test_dns_separator(self):
+        self.login_as_admin()
+        # ',' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8,9.9.9.9,1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
 
-if __name__ == '__main__':
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # ' ' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8 9.9.9.9 1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # '-' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8-9.9.9.9-1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # ';' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8;9.9.9.9;1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

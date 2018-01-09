@@ -26,11 +26,6 @@ class Member(ModifiedMixin, DeclarativeBase):
         'polymorphic_on': type
     }
 
-    @property
-    def roles(self):
-
-        return []
-
     @classmethod
     def _hash_password(cls, password):
         salt = sha256()
@@ -47,9 +42,6 @@ class Member(ModifiedMixin, DeclarativeBase):
 
     def _set_password(self, password):
         """Hash ``password`` on the fly and store its hashed version."""
-        min_length = self.__class__.password.info['min_length']
-        if len(password) < min_length:
-            raise HttpBadRequest('Please enter at least %d characters for password field.' % min_length)
         self._password = self._hash_password(password)
 
     def _get_password(self):
@@ -83,19 +75,6 @@ class Member(ModifiedMixin, DeclarativeBase):
             roles=self.roles,
             sessionId=session_id
         ))
-
-    @classmethod
-    def current(cls):
-        if context.identity is None:
-            raise HttpUnauthorized()
-
-        return cls.query.filter(cls.username == context.identity.username).one()
-
-    def change_password(self, current_password, new_password):
-        if not self.validate_password(current_password):
-            raise HttpBadRequest()
-
-        self.password = new_password
 
     def create_refresh_principal(self):
         return JwtRefreshToken(dict(
