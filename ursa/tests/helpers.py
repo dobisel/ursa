@@ -8,13 +8,13 @@ from ursa.models import Admin
 class WebTestCase(ModelRestCrudTestCase):
     application = ursa.ursa
 
-    def login(self, user_name, password):
+    def login(self, username, password):
         result, metadata = self.request(None, 'POST', '/apiv1/sessions', doc=False, params={
-            'userName': user_name,
+            'username': username,
             'password': password
         })
         self.wsgi_app.jwt_token = result['token']
-        return user_name, password
+        return username, password
 
     def logout(self):
         self.wsgi_app.jwt_token = ''
@@ -24,7 +24,7 @@ class WebTestCase(ModelRestCrudTestCase):
 
         admin = Admin()
         admin.password = '123456'
-        admin.user_name = 'admin'
+        admin.username = 'admin'
         cls.session.add(admin)
 
         cls.session.commit()
