@@ -69,7 +69,7 @@ git archive --format tar origin/master | ssh root@ursa-sandbox 'tar -xv -C /usr/
 
 On server
 ```bash
-cd /usr/local
+cd /usr/local/ursa
 pip3.6 install -e .
 ```
 
