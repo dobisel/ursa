@@ -6,7 +6,7 @@ from ursa.authentication import Authenticator
 from ursa.controllers import Root
 from ursa import basedata
 
-__version__ = '0.1.1-dev.0'
+__version__ = '0.1.2-dev.0'
 
 
 class Ursa(Application):
