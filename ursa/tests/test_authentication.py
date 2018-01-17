@@ -16,13 +16,13 @@ class AuthenticationTestCase(WebTestCase):
             expected_status=400,
         )
 
-        user_name = self.session.query(Member).first().user_name
+        username = self.session.query(Member).first().username
 
         self.request(
             As.everyone, 'POST', '/apiv1/sessions',
             expected_status=400,
             params=[
-                FormParameter('userName', user_name),
+                FormParameter('username', username),
                 FormParameter('password', 'invalidPassword')
             ]
         )
@@ -31,7 +31,7 @@ class AuthenticationTestCase(WebTestCase):
             As.everyone, 'POST', '/apiv1/sessions',
             expected_status=400,
             params=[
-                FormParameter('userName', 'invalidUserName'),
+                FormParameter('username', 'invalidUserName'),
                 FormParameter('password', 'invalidPassword')
             ]
         )
@@ -44,7 +44,7 @@ class AuthenticationTestCase(WebTestCase):
         result, meta = self.request(
             As.everyone, 'POST', '/apiv1/sessions',
             params=[
-                FormParameter('userName', 'admin'),
+                FormParameter('username', 'admin'),
                 FormParameter('password', '123456')
             ]
         )
@@ -52,7 +52,7 @@ class AuthenticationTestCase(WebTestCase):
         principal = JwtPrincipal.load(result['token'])
         self.assertIn('sessionId', principal.payload)
         self.assertDictContainsSubset(principal.payload, {
-            'userName': 'admin',
+            'username': 'admin',
             'roles': ['admin'],
         })
 

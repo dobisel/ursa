@@ -1,6 +1,6 @@
 
 import unittest
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, exists
 import os
 
 from nanohttp import settings
@@ -21,33 +21,34 @@ class InterfaceTestCase(WebTestCase):
     def configure_app(cls):
         super().configure_app()
         settings.merge("""
-        network: 
-          interfaces_file: %(data_dir)s/tests/interfaces
+            network: 
+              interfaces_file: %(data_dir)s/tests/interfaces
         """)
-        if not os.path.isfile(settings.network.interfaces_file):
-            if not os.path.isdir(os.path.join(settings.network.interfaces_dir, 'tests')):
-                os.makedirs(os.path.join(settings.network.interfaces_dir, 'tests'))
+        if exists(settings.network.interfaces_file):
+            os.remove(settings.network.interfaces_file)
 
-        interface_file = open(settings.network.interfaces_file, 'w')
-        interface_file.write(f'iface {settings.network.default_interface} inet static\n')
-        interface_file.write('  address 192.168.1.12\n')
-        interface_file.write('  gateway 192.168.1.1\n')
-        interface_file.write('  broadcast 192.168.1.255\n')
-        interface_file.write('  netmask 255.255.255.0\n')
-        interface_file.write('  network 192.168.1.0\n')
-        interface_file.write('  dns-nameservers 192.168.1.1\n')
-        interface_file.close()
+    def test_none_existing_interface(self):
+        self.login_as_admin()
+        self.request(As.admin, 'GET', self.url)
+        try:
+            preserved_default_interface = settings.network.default_interface
+            settings.network.default_interface = 'NotExistingInterface'
+            self.request(As.admin, 'GET', self.url, expected_status=409)
+        finally:
+            settings.network.default_interface = preserved_default_interface
 
     def test_get(self):
+        # Logout to check anonymous access to interfaces file
+        self.logout()
         self.request(
-            As.admin, 'GET', f'{self.url}',
+            As.anonymous, 'GET', self.url,
             expected_status=401
         )
 
         self.login_as_admin()
 
         response, ___ = self.request(
-            As.admin, 'GET', f'{self.url}'
+            As.admin, 'GET', self.url
         )
 
         iface = InterfacesFile(settings.network.interfaces_file)
@@ -60,17 +61,15 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['nameServers'], interface['dns-nameservers'])
         self.assertEqual(response['networkId'], interface.network)
 
-        self.logout()
-
     def test_put(self):
-
+        self.logout()
         self.request(
-            As.anonymous, 'PUT', f'{self.url}',
+            As.anonymous, 'PUT', self.url,
             expected_status=401
         )
 
         self.request(
-            As.anonymous, 'PUT', f'{self.url}',
+            As.anonymous, 'PUT', self.url,
             params=[
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255'),
@@ -85,12 +84,12 @@ class InterfaceTestCase(WebTestCase):
         self.login_as_admin()
 
         self.request(
-            As.admin, 'PUT', f'{self.url}',
+            As.admin, 'PUT', self.url,
             expected_status=400
         )
 
         self.request(
-            As.admin, 'PUT', f'{self.url}',
+            As.admin, 'PUT', self.url,
             params=[
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255')
@@ -98,32 +97,8 @@ class InterfaceTestCase(WebTestCase):
             expected_status=400
         )
 
-        self.request(
-            As.admin, 'PUT', f'{self.url}',
-            params=[
-                FormParameter('address', '192.168.1.15'),
-                FormParameter('netmask', '192.168.1.255'),
-                FormParameter('gateway', '192.168.1.1'),
-                FormParameter('broadcast', '192.168.1.255'),
-                FormParameter('nameServers', '8.8.8.8 9.9.9.9'),
-                FormParameter('networkId', '')
-            ]
-        )
-
-        self.request(
-            As.admin, 'PUT', f'{self.url}',
-            params=[
-                FormParameter('address', '192.168.1.15'),
-                FormParameter('netmask', '192.168.1.255'),
-                FormParameter('gateway', '192.168.1.1'),
-                FormParameter('broadcast', '192.168.1.255'),
-                FormParameter('nameServers', '8.8.8.8'),
-                FormParameter('networkId', '')
-            ]
-        )
-
         response, ___ = self.request(
-            As.admin, 'PUT', f'{self.url}',
+            As.admin, 'PUT', self.url,
             params=[
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255'),
@@ -152,7 +127,7 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(interface['dns-nameservers'], '8.8.8.8 9.9.9.9 1.1.1.1')
 
         response, ___ = self.request(
-            As.admin, 'PUT', f'{self.url}',
+            As.admin, 'PUT', self.url,
             params=[
                 FormParameter('address', '192.168.1.15'),
                 FormParameter('netmask', '192.168.1.255'),
@@ -166,7 +141,7 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(response['netmask'], '192.168.1.255')
         self.assertEqual(response['gateway'], '192.168.1.1')
         self.assertEqual(response['broadcast'], '192.168.1.255')
-        self.assertEqual(response['nameServers'], '192.168.1.1')
+        self.assertEqual(response['nameServers'], '')
         self.assertEqual(response['networkId'], '1.9.9.9')
 
         iface = InterfacesFile(settings.network.interfaces_file)
@@ -177,10 +152,111 @@ class InterfaceTestCase(WebTestCase):
         self.assertEqual(interface.gateway, '192.168.1.1')
         self.assertEqual(interface.broadcast, '192.168.1.255')
         self.assertEqual(interface.network, '1.9.9.9')
-        self.assertEqual(interface['dns-nameservers'], '192.168.1.1')
+
+        # Invalid address
+        self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', ''),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', ''),
+                FormParameter('networkId', '1.9.9.9'),
+            ],
+            expected_status=400
+        )
+
+        # Update only require fields
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', ''),
+                FormParameter('broadcast', ''),
+                FormParameter('nameServers', ''),
+                FormParameter('networkId', ''),
+            ]
+        )
+
+        self.assertEqual(response['address'], '192.168.1.15')
+        self.assertEqual(response['netmask'], '192.168.1.255')
+        self.assertEqual(response['gateway'], '')
+        self.assertEqual(response['broadcast'], '')
+        self.assertEqual(response['nameServers'], '')
+        self.assertEqual(response['networkId'], '')
+
+        iface = InterfacesFile(settings.network.interfaces_file)
+        interface = iface.get_iface('eth0')
+
+        self.assertEqual(interface.address, '192.168.1.15')
+        self.assertEqual(interface.netmask, '192.168.1.255')
 
         self.logout()
 
+    def test_dns_separator(self):
+        self.login_as_admin()
+        # ',' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8,9.9.9.9,1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
 
-if __name__ == '__main__':
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # ' ' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8 9.9.9.9 1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # '-' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8-9.9.9.9-1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+        # ';' separator
+        response, ___ = self.request(
+            As.admin, 'PUT', self.url,
+            params=[
+                FormParameter('address', '192.168.1.15'),
+                FormParameter('netmask', '192.168.1.255'),
+                FormParameter('gateway', '192.168.1.1'),
+                FormParameter('broadcast', '192.168.1.255'),
+                FormParameter('nameServers', '8.8.8.8;9.9.9.9;1.1.1.1'),
+                FormParameter('networkId', '1.9.9.9'),
+            ]
+        )
+
+        self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
+
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

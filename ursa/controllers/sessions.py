@@ -9,18 +9,18 @@ class SessionsController(RestController):
 
     @json
     def post(self):
-        user_name = context.form.get('userName')
+        username = context.form.get('username')
         password = context.form.get('password')
 
         def bad():
-            logger.info('Login failed: %s' % user_name)
+            logger.info('Login failed: %s' % username)
             raise HttpBadRequest('Invalid username or password')
 
-        if not (user_name and password):
+        if not (username and password):
             bad()
 
-        logger.info('Trying to login: %s' % user_name)
-        principal = context.application.__authenticator__.login((user_name, password))
+        logger.info('Trying to login: %s' % username)
+        principal = context.application.__authenticator__.login((username, password))
         if principal is None:
             bad()
 

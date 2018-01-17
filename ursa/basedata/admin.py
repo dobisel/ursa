@@ -5,7 +5,7 @@ from ursa.models import Admin
 
 def insert():  # pragma: no cover
     admin = Admin()
-    admin.user_name = 'admin'
+    admin.username = 'admin'
     admin.password = '123456'
     DBSession.add(admin)
 

@@ -6,7 +6,7 @@ from ursa.authentication import Authenticator
 from ursa.controllers import Root
 from ursa import basedata
 
-__version__ = '0.1.0-planning.0'
+__version__ = '0.2.0-dev.0'
 
 
 class Ursa(Application):
@@ -23,9 +23,13 @@ class Ursa(Application):
       welcome_url: http://localhost:8081/welcome
     
     network:
-      interfaces_dir: %(data_dir)s
       interfaces_file: %(data_dir)s/interfaces
       default_interface: eth0
+      
+    system_manager:
+      default: ursa.system.SystemManager
+      reboot_command: sleep 1;/sbin/reboot
+      shutdown_command: sleep 1;/sbin/poweroff
     """
 
     def __init__(self):
@@ -36,10 +40,11 @@ class Ursa(Application):
             version=__version__,
         )
 
-    def insert_mockup(self):
+    def insert_mockup(self):  # pragma: no cover
         print('No mockup data.')
 
     def insert_basedata(self):  # pragma: no cover
         basedata.insert()
+
 
 ursa = Ursa()

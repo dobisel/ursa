@@ -9,7 +9,7 @@ Preparation
 
 ```bash
 sudo su -
-apt-get install nginx build-essential python3-pip postgresql libpq-dev
+apt install nginx build-essential python3-pip postgresql libpq-dev redis-server
 ```
 
 ### Python3.6
@@ -25,7 +25,7 @@ make -j4
 make altinstall
 ```
 
-### Virtual env
+### Install setuptoolswheel
 
 ```bash
 pip3.6 install -U pip setuptools wheel
@@ -45,7 +45,7 @@ Create a file `/etc/ursa.yml` with this contents:
 
 ```yaml
 db:
-  url:  url: postgresql+psycopg2://ursa:@/ursa
+  url: postgresql+psycopg2://root:@/ursa
 
   echo: false
 application:
@@ -56,40 +56,25 @@ network:
   interfaces_file: /etc/network/interfaces
   default_interface: enp0s3
 ```
+Copy your project to `/usr/local/ursa`
 
-###Install
-Go to your ursa repository on your workspace
 ```bash
-cd path/to/ursa
-git archive --format tar origin/master | ssh root@ursa-sandbox 'tar -xv -C /usr/local/ursa'
-```
-
-On server
-```bash
-cd /usr/local
-v.activate && workon ursa
-sudo pip install -e .
+cd /usr/local/ursa
+pip3.6 install -e .
 ```
 
 #### Install Network Interfaces
-Go to your network-interfaces repository on your workspace
-
-```bash
-cd path/to/network-interfaces
-git archive --format tar.gz origin/master | ssh root@ursa-sandbox 'cat - > /tmp/network-interfaces.tar.gz'
-```
-On server
+Copy `network-interfaces.tar.gz` project to `/tmp`
 ```bash
 pip3.6 install /tmp/network-interfaces.tar.gz 
 
 ```
 
-
 #### Database objects
 
 ```bash
-v.activate && workon ursa
-ursa -c /etc/ursa.yml admin create-db --drop --basedata
+ursa --config-file /etc/ursa.yml admin setup-db
+ursa --config-file /etc/ursa.yml admin base-data
 ```
 
 ##### Systemd
@@ -118,7 +103,6 @@ WantedBy=multi-user.target
 /etc/systemd/system/ursa.socket:
 
 ```ini
-[Unit]
 Description=ursa socket
 
 [Socket]
@@ -163,20 +147,22 @@ upstream ursa_webapi {
 
 server {
     listen 80;
-
+    
+    root /usr/local/octopus;
+    index index.html;
+    
     location / {
       try_files $uri $uri/ @rewrites;
     }
     
     location ~ /static/(.*) {
       include /etc/nginx/mime.types;
-      alias /usr/local/ursa/static/$1;
+      alias /usr/local/octopus/static/$1;
     }
 
     location @rewrites {
       rewrite ^(.+)$ /index.html last;
     }
-
 
     location /apiv1/ {
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
