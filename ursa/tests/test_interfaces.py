@@ -257,6 +257,13 @@ class InterfaceTestCase(WebTestCase):
 
         self.assertEqual(response['nameServers'], '8.8.8.8 9.9.9.9 1.1.1.1')
 
+    def test_metadata(self):
+
+        response, ___ = self.request(As.admin, 'METADATA', self.url)
+        self.assertIsNotNone(response)
+
+
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

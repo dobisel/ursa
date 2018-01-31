@@ -97,3 +97,121 @@ class InterfacesController(RestController):
         interfaces.save(validate=False)
         context.form['nameServers'] = name_servers
         return context.form
+
+    @json
+    def metadata(self):
+        return {
+            "name": "Interface",
+            "primaryKeys": [
+            ],
+            "fields": {
+                "address": {
+                    "name": "address",
+                    "key": "address",
+                    "type_": "str",
+                    "default": None,
+                    "optional": False,
+                    "pattern": "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "Address",
+                    "label": "Address",
+                    "icon": None,
+                    "example": "192.168.1.5",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+                "netmask": {
+                    "name": "netmask",
+                    "key": "netmask",
+                    "type_": "str",
+                    "default": None,
+                    "optional": False,
+                    "pattern": "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "NetMask",
+                    "label": "NetMask",
+                    "icon": None,
+                    "example": "255.255.255.0",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+                "gateway": {
+                    "name": "gateway",
+                    "key": "gateway",
+                    "type_": "str",
+                    "default": None,
+                    "optional": True,
+                    "pattern": "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "Gateway",
+                    "label": "Gateway",
+                    "icon": None,
+                    "example": "192.168.1.1",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+                "broadcast": {
+                    "name": "broadcast",
+                    "key": "broadcast",
+                    "type_": "str",
+                    "default": None,
+                    "optional": True,
+                    "pattern": "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "Broadcast",
+                    "label": "Broadcast",
+                    "icon": None,
+                    "example": "192.168.1.255",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+                "network": {
+                    "name": "network",
+                    "key": "network",
+                    "type_": "str",
+                    "default": None,
+                    "optional": True,
+                    "pattern": "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "Network",
+                    "label": "Network",
+                    "icon": None,
+                    "example": "192.168.1.0",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+                "nameServers": {
+                    "name": "nameServers",
+                    "key": "nameServers",
+                    "type_": "str",
+                    "default": None,
+                    "optional": True,
+                    "pattern": None,
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "message": "Invalid Value",
+                    "watermark": "NameServers",
+                    "label": "NameServers",
+                    "icon": None,
+                    "example": "8.8.8.8 9.9.9.9",
+                    "primaryKey": False,
+                    "readonly": False,
+                    "protected": False
+                },
+            }
+        }
