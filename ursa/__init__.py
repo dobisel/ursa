@@ -6,7 +6,7 @@ from ursa.authentication import Authenticator
 from ursa.controllers import Root
 from ursa import basedata
 
-__version__ = '0.2.0-dev.0'
+__version__ = '0.2.1a0'
 
 
 class Ursa(Application):
@@ -21,11 +21,11 @@ class Ursa(Application):
 
     application:
       welcome_url: http://localhost:8081/welcome
-    
+
     network:
       interfaces_file: %(data_dir)s/interfaces
       default_interface: eth0
-      
+
     system_manager:
       default: ursa.system.SystemManager
       reboot_command: sleep 1;/sbin/reboot
